@@ -1,6 +1,4 @@
-# %% [markdown]
-# ![image.png](attachment:image.png)
-# - Configuration details for the 124 million parameter GPT-2 model 
+
 
 # %%
 import _frozen_importlib_external
@@ -28,19 +26,7 @@ GPT_CONFIG_24M = {
 import tiktoken 
 tokenizer = tiktoken.get_encoding("gpt2")
 
-# %% [markdown]
-# ![image.png](attachment:image.png)
-# 
-# - normalization is the activitions nn layer around mean of 0 and normalize variance to 1
-# - helps to stabilize and faster convergences to effective weights
-# - applied both before and after the multi-head attention, final output layer
-# 
-# ![image-2.png](attachment:image-2.png)
-# 
-# - dimension [ dim--> 0 the first index
-#               dim--> -1 the last index]
-# - scale and shifts are trainable parameters that helps to auto adjust during training
-# - eps (~ 0) to avoid division-to-zero error incase the var is 0
+
 
 # %%
 class LayerNorm(nn.Module):
@@ -56,9 +42,7 @@ class LayerNorm(nn.Module):
         norm_x = (x - mean) / torch.sqrt(var + self.eps)
         return self.scale * norm_x + self.shift
 
-# %% [markdown]
-# ![image.png](attachment:image.png)
-# - GELU is non-linear function, non-zero gradient for negative values
+
 
 # %%
 class GELU(nn.Module):
@@ -67,8 +51,7 @@ class GELU(nn.Module):
     def forward(self,x):
         return 0.5*x*(1+torch.tanh(torch.sqrt(torch.tensor(2.0/torch.pi))*(x+0.044715*torch.pow(x,3))))
 
-# %% [markdown]
-# ![image.png](attachment:image.png)
+
 
 # %%
 
@@ -90,15 +73,12 @@ class FeedForward(nn.Module):
 # %%
 ffn = FeedForward(GPT_CONFIG_24M)
 
-# input shape: [batch_size, num_token, emb_size]
+
 x = torch.rand(2, 3, 768) 
 out = ffn(x)
 print(out.shape)
 
-# %% [markdown]
-# ![image.png](attachment:image.png)
-# - shortcut or skip/residual connection to solve the gradient problem
-# - it works by connecting the output of one layer to another 
+ 
 
 # %%
 from MultiHeadAttn import MultiHeadAttn
@@ -148,11 +128,6 @@ output = block(x)
 print("Input shape:", x.shape)
 print("Output shape:", output.shape)
 
-
-# %% [markdown]
-# ![image.png](attachment:image.png)
-
-# %%
 
 
 # %%
@@ -228,13 +203,9 @@ def generate_text (model, idx, max_token, context_size):
             idx = torch.cat((idx, idx_next), dim=1)
         return idx
 
-# %%
 
 
-# %% [markdown]
-# ![image.png](attachment:image.png)
-# 
-# - 'unsqueeze' is used to add dimension. if dim[T]-->dim[B T]
+
 
 # %%
 
@@ -251,48 +222,4 @@ out = generate_text (model=model, idx=encode_tensor, max_token=6, context_size=G
 decoded_text = tokenizer.decode(out.squeeze(0).tolist())
 print(decoded_text)
 
-
-# %% [markdown]
-# | Keyword          | What it Does                | Input Shape | Output Shape | Why Used in GPT          |
-# | ---------------- | --------------------------- | ----------- | ------------ | ------------------------ |
-# | `unsqueeze(dim)` | Adds a dimension of size 1  | `[T]`       | `[1, T]`     | Add batch dimension      |
-# | `squeeze(dim)`   | Removes dimension of size 1 | `[1, T]`    | `[T]`        | Remove fake dimensions   |
-# | `view()`         | Reshapes tensor             | `[B, T, C]` | custom       | Split heads in attention |
-# | `reshape()`      | Safe reshape                | `[B, T, C]` | custom       | Same as view but safer   |
-# | `transpose(a,b)` | Swaps dimensions            | `[B,T,C]`   | `[B,C,T]`    | Attention math           |
-# | `permute()`      | Reorders dimensions         | `[B,T,H,D]` | `[B,H,T,D]`  | Multi-head attention     |
-# | `expand()`       | Broadcast without copy      | `[1,T,C]`   | `[B,T,C]`    | Position embeddings      |
-# | `repeat()`       | Copies data                 | `[1,T,C]`   | `[B,T,C]`    | Rare in GPT              |
-# 
-
-# %% [markdown]
-# | Keyword           | What it Does             | Where Used                 |
-# | ----------------- | ------------------------ | -------------------------- |
-# | `nn.Module`       | Base class for models    | GPTModel, TransformerBlock |
-# | `__init__()`      | Defines layers           | Model construction         |
-# | `forward()`       | Defines computation      | Model execution            |
-# | `model(x)`        | Calls forward internally | Training & inference       |
-# | `model.eval()`    | Disable dropout          | Generation                 |
-# | `torch.no_grad()` | Disable gradients        | Inference                  |
-# 
-
-# %% [markdown]
-# | Component            | Purpose             | Input     | Output    |
-# | -------------------- | ------------------- | --------- | --------- |
-# | `nn.Embedding`       | Token lookup        | `[B,T]`   | `[B,T,C]` |
-# | Token Embedding      | Word representation | token ids | vectors   |
-# | Positional Embedding | Position info       | positions | vectors   |
-# | TransformerBlock     | Attention + FFN     | `[B,T,C]` | `[B,T,C]` |
-# | LayerNorm            | Stabilizes training | `[B,T,C]` | `[B,T,C]` |
-# | Linear               | Projection          | `[B,T,C]` | `[B,T,V]` |
-# 
-
-# %% [markdown]
-# | Keyword            | Purpose                  | Example              |
-# | ------------------ | ------------------------ | -------------------- |
-# | `logits[:, -1, :]` | Last token prediction    | next token           |
-# | `argmax()`         | Greedy sampling          | deterministic output |
-# | `softmax()`        | Convert to probabilities | sampling             |
-# | `torch.cat()`      | Append token             | grow sequence        |
-# 
 
