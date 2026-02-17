@@ -1,17 +1,17 @@
 
 
-# %%
+#%%
 import _frozen_importlib_external
 import sysconfig
 from importlib.metadata import version
 
 
-# %%
+
 import torch
 import torch.nn as nn
 
 
-# %%
+
 GPT_CONFIG_24M = {
     "vocab_size": 50257,
     "context_length": 1024,
@@ -22,13 +22,15 @@ GPT_CONFIG_24M = {
     "qkv_bias": False
 }
 
-# %%
+
+
+
 import tiktoken 
 tokenizer = tiktoken.get_encoding("gpt2")
 
 
 
-# %%
+
 class LayerNorm(nn.Module):
     def __init__(self, emb_dim):
         super().__init__()
@@ -44,7 +46,7 @@ class LayerNorm(nn.Module):
 
 
 
-# %%
+
 class GELU(nn.Module):
     def __init__(self):
         super().__init__()
@@ -53,7 +55,7 @@ class GELU(nn.Module):
 
 
 
-# %%
+
 
 
 class FeedForward(nn.Module):
@@ -70,7 +72,7 @@ class FeedForward(nn.Module):
 
 
 
-# %%
+
 ffn = FeedForward(GPT_CONFIG_24M)
 
 
@@ -80,12 +82,12 @@ print(out.shape)
 
  
 
-# %%
+
 from MultiHeadAttn import MultiHeadAttn
 
 
 
-# %%
+
 
 class TransformerBlock(nn.Module):
     def __init__(self,cfg):
@@ -118,7 +120,7 @@ class TransformerBlock(nn.Module):
 
         return x
 
-# %%
+
 torch.manual_seed(123)
 
 x = torch.rand(2, 4, 768) 
@@ -130,7 +132,7 @@ print("Output shape:", output.shape)
 
 
 
-# %%
+
 import torch
 import torch.nn as nn
 
@@ -181,7 +183,7 @@ class GPTModel(nn.Module):
         return logits
 
 
-# %%
+
 
 torch.manual_seed(123)
 model = GPTModel(GPT_CONFIG_24M)
@@ -191,35 +193,38 @@ print("Input batch:\n", batch)
 print("\nOutput shape:", out.shape)
 print(out)
 
-# %%
-def generate_text (model, idx, max_token, context_size):
+
+def generate_text(model, idx, max_token, context_size):
     for _ in range(max_token):
-        idx_condition = idx[:,-context_size:]
+        idx_condition = idx[:, -context_size:]
         with torch.no_grad():
             logits = model(idx_condition)
-            logits = logits[:,-1,:]
+            logits = logits[:, -1, :]
             probability = torch.softmax(logits, dim=-1)
-            idx_next = torch.argmax(probability,dim=-1, keepdim=True)
+            idx_next = torch.argmax(probability, dim=-1, keepdim=True)
             idx = torch.cat((idx, idx_next), dim=1)
-        return idx
+    return idx
 
 
 
 
 
-# %%
+
+
 
 starting_context = "Hello, I am"
 encode = tokenizer.encode(starting_context)
 encode_tensor = torch.tensor(encode).unsqueeze(0)
 
-# %%
+
 model.eval()
 out = generate_text (model=model, idx=encode_tensor, max_token=6, context_size=GPT_CONFIG_24M["context_length"])
 
-
-# %%
 decoded_text = tokenizer.decode(out.squeeze(0).tolist())
 print(decoded_text)
 
 
+
+
+
+# %%
