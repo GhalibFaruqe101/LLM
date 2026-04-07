@@ -211,7 +211,6 @@ def generate_text(model, idx, max_token, context_size):
 
 
 
-
 starting_context = "Hello, I am"
 encode = tokenizer.encode(starting_context)
 encode_tensor = torch.tensor(encode).unsqueeze(0)
